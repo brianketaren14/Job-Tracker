@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – AI Job Tracker{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Skills Dashboard</h1>
+    <p class="page-subtitle">Most in-demand skills across AI, ML & Data Science roles</p>
+  </div>
+  <div class="header-meta">
+    {% if next_run %}
+    <span class="status-pill status-ok">⏱ Next scrape: {{ next_run.strftime('%H:%M %Z') }}</span>
+    {% else %}
+    <span class="status-pill status-warn">⚠ Scheduler not running</span>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ── Skill Bar Chart ── -->
+<section class="chart-section">
+  <div class="chart-card">
+    <h2 class="card-title">Top 20 Most-Requested Skills</h2>
+    <div class="chart-wrap">
+      <canvas id="skillChart"></canvas>
+    </div>
+  </div>
+</section>
+
+<!-- ── Skill Tags Cloud ── -->
+<section class="tags-section">
+  <h2 class="card-title">Skill Frequency Map</h2>
+  <div class="skill-cloud">
+    {% set max_freq = skills[0].frequency if skills else 1 %}
+    {% for s in skills %}
+    {% set size = (s.frequency / max_freq * 1.6 + 0.8) | round(2) %}
+    <span class="skill-bubble"
+      style="font-size: {{ size }}rem; opacity: {{ (s.frequency / max_freq * 0.6 + 0.4) | round(2) }}">
+      {{ s.skill }}
+      <sup class="skill-count">{{ s.frequency }}</sup>
+    </span>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- ── Recent Scrape Runs ── -->
+<section class="runs-section">
+  <h2 class="card-title">Recent Pipeline Runs</h2>
+  <div class="table-wrap">
+    <table class="run-table">
+      <thead>
+        <tr>
+          <th>Started</th>
+          <th>Status</th>
+          <th>Jobs Added</th>
+          <th>Skipped</th>
+          <th>Duration</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for run in recent_runs %}
+        <tr>
+          <td>{{ run.started_at[:16].replace('T', ' ') }}</td>
+          <td>
+            <span class="status-pill
+              {% if run.status == 'success' %}status-ok
+              {% elif run.status == 'failed' %}status-err
+              {% else %}status-warn{% endif %}">
+              {{ run.status }}
+            </span>
+          </td>
+          <td class="num">{{ run.jobs_added }}</td>
+          <td class="num">{{ run.jobs_skipped }}</td>
+          <td>
+            {% if run.finished_at %}
+            {{ ((run.finished_at[:19] | replace('T',' ') ) ) }}
+            {% else %}–{% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5" class="empty-row">No pipeline runs recorded yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Manual trigger button -->
+  <div class="trigger-wrap">
+    <button id="triggerBtn" class="btn btn-primary" onclick="triggerPipeline()">
+      ▶ Run Pipeline Now
+    </button>
+    <span id="triggerStatus" class="trigger-status"></span>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // ── Chart.js bar chart ───────────────────────────────────────────
+  const skillData = {{ skills | tojson }};
+
+  const labels = skillData.map(s => s.skill.charAt(0).toUpperCase() + s.skill.slice(1));
+  const values = skillData.map(s => s.frequency);
+
+  // Gradient fill
+  const ctx = document.getElementById('skillChart').getContext('2d');
+  const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+  gradient.addColorStop(0, 'rgba(99, 102, 241, 0.9)');
+  gradient.addColorStop(1, 'rgba(99, 102, 241, 0.3)');
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Job Postings',
+        data: values,
+        backgroundColor: gradient,
+        borderColor: 'rgba(99, 102, 241, 1)',
+        borderWidth: 1,
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.parsed.y} postings`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: '#9ca3af',
+            font: { family: 'Inter', size: 12 },
+            maxRotation: 45,
+          },
+          grid: { display: false },
+        },
+        y: {
+          ticks: {
+            color: '#9ca3af',
+            font: { family: 'Inter', size: 12 },
+            stepSize: 1,
+          },
+          grid: { color: 'rgba(255,255,255,0.06)' },
+          beginAtZero: true,
+        }
+      }
+    }
+  });
+
+  // ── Manual pipeline trigger ──────────────────────────────────────
+  async function triggerPipeline() {
+    const btn = document.getElementById('triggerBtn');
+    const status = document.getElementById('triggerStatus');
+
+    btn.disabled = true;
+    btn.textContent = '⏳ Running…';
+    status.textContent = '';
+
+    try {
+      const secret = prompt('Enter API secret (FLASK_SECRET_KEY):');
+      if (!secret) { btn.disabled = false; btn.textContent = '▶ Run Pipeline Now'; return; }
+
+      const res = await fetch('/api/trigger', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${secret}` }
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        status.textContent = '✅ ' + data.status;
+        status.style.color = '#22c55e';
+      } else {
+        status.textContent = '❌ ' + (data.error || 'Error');
+        status.style.color = '#ef4444';
+      }
+    } catch (e) {
+      status.textContent = '❌ Network error';
+      status.style.color = '#ef4444';
+    }
+
+    btn.textContent = '▶ Run Pipeline Now';
+    btn.disabled = false;
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Job Listings – AI Job Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">AI & ML Job Listings</h1>
+    <p class="page-subtitle">{{ total }} validated positions in Data Science, AI & Machine Learning</p>
+  </div>
+</div>
+
+<!-- Search bar -->
+<form class="search-form" method="GET" action="/">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" name="q" class="search-input" placeholder="Search by job title…" value="{{ search }}" />
+    <button type="submit" class="btn btn-primary">Search</button>
+    {% if search %}
+    <a href="/" class="btn btn-ghost">Clear</a>
+    {% endif %}
+  </div>
+</form>
+
+<!-- Job cards -->
+{% if jobs %}
+<div class="job-grid">
+  {% for job in jobs %}
+  <article class="job-card">
+    <div class="job-card-header">
+      <div>
+        <h2 class="job-title">
+          <a href="/job/{{ job.id }}">{{ job.title }}</a>
+        </h2>
+        <p class="job-meta">
+          <span class="company">🏢 {{ job.company }}</span>
+          {% if job.location %}
+          <span class="location">📍 {{ job.location }}</span>
+          {% endif %}
+          {% if job.salary %}
+          <span class="salary">💰 {{ job.salary }}</span>
+          {% endif %}
+        </p>
+      </div>
+      <div class="job-tags">
+        {% for tag in (job.domain_tags or [])[:2] %}
+        <span class="tag">{{ tag }}</span>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if job.summary %}
+    <div class="job-summary">
+      {{ job.summary | replace('• ', '') | truncate(200) }}
+    </div>
+    {% endif %}
+
+    <div class="job-card-footer">
+      <a href="{{ job.url }}" target="_blank" rel="noopener" class="btn btn-outline">
+        Apply ↗
+      </a>
+      <a href="/job/{{ job.id }}" class="btn btn-ghost">View Details</a>
+
+      {# Tampilkan tanggal publikasi jika tersedia, fallback ke created_at #}
+      {% if job.published_at %}
+      <span class="job-date" data-ts="{{ job.published_at }}" title="Dipublikasikan: {{ job.published_at }}">
+        📅 <time datetime="{{ job.published_at }}">{{ job.published_at }}</time>
+      </span>
+      {% else %}
+      <span class="job-date" data-ts="{{ job.created_at }}" title="Ditambahkan: {{ job.created_at }}">
+        🕐 <time datetime="{{ job.created_at }}">{{ job.created_at }}</time>
+      </span>
+      {% endif %}
+    </div>
+  </article>
+  {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if pages > 1 %}
+<nav class="pagination">
+  {% if page > 1 %}
+  <a href="/?page={{ page - 1 }}&q={{ search }}" class="page-btn">← Prev</a>
+  {% endif %}
+
+  {% for p in range([1, page - 2]|max, [pages + 1, page + 3]|min) %}
+  <a href="/?page={{ p }}&q={{ search }}" class="page-btn {% if p == page %}active{% endif %}">{{ p }}</a>
+  {% endfor %}
+
+  {% if page < pages %} <a href="/?page={{ page + 1 }}&q={{ search }}" class="page-btn">Next →</a>
+    {% endif %}
+</nav>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon">🤖</div>
+  <h3>No jobs found yet</h3>
+  <p>The pipeline hasn't run yet, or no results matched your search.</p>
+  {% if search %}
+  <a href="/" class="btn btn-primary">Clear search</a>
+  {% endif %}
+</div>
+{% endif %}
+
+{# Format semua timestamp di halaman menjadi "DD MMM YYYY" yang mudah dibaca #}
+<script>
+  document.querySelectorAll('.job-date time').forEach(function (el) {
+    const raw = el.getAttribute('datetime');
+    if (!raw) return;
+    try {
+      const d = new Date(raw);
+      if (isNaN(d.getTime())) return;
+      el.textContent = d.toLocaleDateString('id-ID', {
+        day: '2-digit', month: 'short', year: 'numeric'
+      });
+    } catch (e) { }
+  });
+</script>
+{% endblock %}

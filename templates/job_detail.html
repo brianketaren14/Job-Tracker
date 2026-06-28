@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}{{ job.title }} – AI Job Tracker{% endblock %}
+
+{% block content %}
+<div class="detail-wrap">
+  <a href="/" class="back-link">← Back to listings</a>
+
+  <article class="detail-card">
+    <header class="detail-header">
+      <div>
+        <h1 class="detail-title">{{ job.title }}</h1>
+        <p class="detail-meta">
+          <span>🏢 {{ job.company }}</span>
+          {% if job.location %}<span>📍 {{ job.location }}</span>{% endif %}
+          {% if job.salary %}<span>💰 {{ job.salary }}</span>{% endif %}
+        </p>
+        <div class="tag-row">
+          {% for tag in (job.domain_tags or []) %}
+          <span class="tag">{{ tag }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      <a href="{{ job.url }}" target="_blank" rel="noopener" class="btn btn-primary btn-lg">
+        Apply Now ↗
+      </a>
+    </header>
+
+    {% if job.summary %}
+    <section class="detail-section">
+      <h2 class="section-title">Summary</h2>
+      <div class="summary-bullets">
+        {% for line in job.summary.split('\n') %}
+        {% if line.strip() %}
+        <p class="bullet">{{ line.strip() }}</p>
+        {% endif %}
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    {% if job.description_raw %}
+    <section class="detail-section">
+      <h2 class="section-title">Full Description</h2>
+      <div class="description-text">{{ job.description_raw }}</div>
+    </section>
+    {% endif %}
+
+    <footer class="detail-footer">
+      <small id="detail-meta-dates">
+        {# Tanggal publikasi dari sumber (published_at) #}
+        {% if job.published_at %}
+        📅 Dipublikasikan:
+        <time id="ts-published" datetime="{{ job.published_at }}">{{ job.published_at }}</time>
+        &nbsp;·&nbsp;
+        {% endif %}
+
+        {# Tanggal ditambahkan ke sistem (created_at) #}
+        🕐 Ditambahkan:
+        <time id="ts-added" datetime="{{ job.created_at }}">{{ job.created_at }}</time>
+
+        &nbsp;·&nbsp; Sumber:
+        <a href="{{ job.url }}" target="_blank" rel="noopener">Original posting ↗</a>
+      </small>
+    </footer>
+  </article>
+</div>
+
+<script>
+  // Format semua elemen <time> ke format lokal yang mudah dibaca
+  document.querySelectorAll('footer time').forEach(function (el) {
+    const raw = el.getAttribute('datetime');
+    if (!raw) return;
+    try {
+      const d = new Date(raw);
+      if (isNaN(d.getTime())) return;
+      el.textContent = d.toLocaleDateString('id-ID', {
+        day: '2-digit', month: 'long', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+      });
+    } catch (e) { }
+  });
+</script>
+{% endblock %}
