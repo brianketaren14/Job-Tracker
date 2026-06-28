@@ -11,7 +11,7 @@ gunicorn==22.0.0
 # Do NOT pin openai manually — crewai 1.14.6 requires openai>=2.30.0
 # which is a major version bump. Let pip resolve it automatically.
 crewai==1.14.6
-
+litellm
 
 # ── Database ────────────────────────────────────────────────
 supabase==2.15.0
