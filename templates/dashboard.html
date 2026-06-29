@@ -53,32 +53,44 @@
     <table class="run-table">
       <thead>
         <tr>
-          <th>Started</th>
-          <th>Status</th>
-          <th>Jobs Added</th>
-          <th>Skipped</th>
-          <th>Duration</th>
+          <th style="text-align: center;">Started</th>
+          <th style="text-align: center;">Status</th>
+          <th style="text-align: center;">Jobs Added</th>
+          <th style="text-align: center;">Skipped</th>
+          <th style="text-align: center;">Duration</th>
         </tr>
       </thead>
       <tbody>
         {% for run in recent_runs %}
         <tr>
-          <td>{{ run.started_at[:16].replace('T', ' ') }}</td>
-          <td>
+          <!-- Started -->
+          <td class="started-at" data-start="{{ run.started_at }}" style="text-align: center;">
+            {{ run.started_at }}
+          </td>
+
+          <!-- Status -->
+          <td style="text-align: center;">
             <span class="status-pill
-              {% if run.status == 'success' %}status-ok
-              {% elif run.status == 'failed' %}status-err
-              {% else %}status-warn{% endif %}">
+        {% if run.status == 'success' %}status-ok
+        {% elif run.status == 'failed' %}status-err
+        {% else %}status-warn{% endif %}">
               {{ run.status }}
             </span>
           </td>
-          <td class="num">{{ run.jobs_added }}</td>
-          <td class="num">{{ run.jobs_skipped }}</td>
-          <td>
-            {% if run.finished_at %}
-            {{ ((run.finished_at[:19] | replace('T',' ') ) ) }}
-            {% else %}–{% endif %}
+
+          <!-- Jobs Added -->
+          <td class="num" style="text-align: center;">{{ run.jobs_added }}</td>
+
+          <!-- Skipped -->
+          <td class="num" style="text-align: center;">{{ run.jobs_skipped }}</td>
+
+          <!-- Finished -->
+          <td class="finished-at" data-finish="{{ run.finished_at }}" style="display:none;">
+            {{ run.finished_at }}
           </td>
+
+          <!-- Duration -->
+          <td class="duration" style="text-align: center;">–</td>
         </tr>
         {% else %}
         <tr>
@@ -101,6 +113,48 @@
 
 {% block extra_scripts %}
 <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("tr").forEach(row => {
+      const startRaw = row.querySelector(".started-at")?.dataset.start;
+      const finishRaw = row.querySelector(".finished-at")?.dataset.finish;
+      const startEl = row.querySelector(".started-at");
+      const finishEl = row.querySelector(".finished-at");
+      const durationEl = row.querySelector(".duration");
+
+      if (startRaw) {
+        const start = new Date(startRaw);
+        startEl.textContent = start.toLocaleString("id-ID", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+
+        if (finishRaw) {
+          const finish = new Date(finishRaw);
+          finishEl.textContent = finish.toLocaleString("id-ID", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+          });
+
+          // Hitung durasi
+          const diffMs = finish - start;
+          if (diffMs > 0) {
+            const diffSec = Math.floor(diffMs / 1000);
+            const hours = Math.floor(diffSec / 3600);
+            const minutes = Math.floor((diffSec % 3600) / 60);
+            const seconds = diffSec % 60;
+
+            durationEl.textContent = `${hours} jam ${minutes} menit ${seconds} detik`;
+          }
+        }
+      }
+    });
+  });
   // ── Chart.js bar chart ───────────────────────────────────────────
   const skillData = {{ skills | tojson }};
 
