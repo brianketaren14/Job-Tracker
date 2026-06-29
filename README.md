@@ -1,8 +1,8 @@
 # ⚡ AI Job Tracker
 
-> Agentic AI system that automatically scrapes, analyses, and displays
-> Data Science / AI / ML job listings using **CrewAI + NVIDIA NIM + Flask + Supabase**.
-> link : https://ai-job-tracker-production-e225.up.railway.app/
+- Agentic AI system that automatically scrapes, analyses, and displays
+- Data Science / AI / ML job listings using **CrewAI + NVIDIA NIM + Flask + Supabase**.
+- Website : [website](https://ai-job-tracker-production-e225.up.railway.app/)
 
 ## Background
 
