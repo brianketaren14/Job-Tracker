@@ -24,7 +24,6 @@ load_dotenv()
 # ==========================
 from langchain.agents import create_agent
 from langchain_groq import ChatGroq
-from langchain_nvidia_ai_endpoints import ChatNVIDIADynamo
 
 from langgraph.graph import StateGraph, START, END
 
