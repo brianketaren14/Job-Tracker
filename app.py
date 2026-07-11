@@ -32,11 +32,35 @@ scrape_status = {
 scrape_lock = threading.Lock()
 
 
+def try_acquire_scrape_lock():
+    """Distributed lock via Supabase row — valid lintas proses/container."""
+    now = datetime.now(ZoneInfo("Asia/Jakarta")).isoformat()
+    result = (
+        supabase.table("scrape_lock")
+        .update({"status": "running", "started_at": now, "message": ""})
+        .eq("id", 1)
+        .eq("status", "idle")   # hanya berhasil kalau memang sedang idle
+        .execute()
+    )
+    return len(result.data) > 0
+
+
+def release_scrape_lock(status, message):
+    supabase.table("scrape_lock").update({
+        "status": "idle",
+        "finished_at": datetime.now(ZoneInfo("Asia/Jakarta")).isoformat(),
+        "message": message,
+    }).eq("id", 1).execute()
+
+
 def run_graph():
-    """Jalankan LangGraph pipeline di thread terpisah."""
-    from graph import call_graph   # import lazy supaya Flask tidak crash kalau deps belum siap
+    from graph import call_graph
     wib = ZoneInfo("Asia/Jakarta")
     start_time = datetime.now(wib)
+
+    if not try_acquire_scrape_lock():
+        print("=== SKIP: scraping sudah berjalan di proses/container lain ===")
+        return
 
     with scrape_lock:
         scrape_status["running"] = True
@@ -60,11 +84,31 @@ def run_graph():
             scrape_status["last_run_status"] = status
             scrape_status["last_run_message"] = message
             scrape_status["history"].insert(0, entry)
-            scrape_status["history"] = scrape_status["history"][:20]   # simpan 20 terakhir
+            scrape_status["history"] = scrape_status["history"][:20]
+        release_scrape_lock(status, message)
 
+def try_acquire_scrape_lock(stale_after_minutes=30):
+    now = datetime.now(ZoneInfo("Asia/Jakarta"))
+    row = supabase.table("scrape_lock").select("*").eq("id", 1).single().execute().data
+
+    is_stale = False
+    if row["status"] == "running" and row.get("started_at"):
+        started = datetime.fromisoformat(row["started_at"])
+        if (now - started).total_seconds() > stale_after_minutes * 60:
+            is_stale = True
+
+    if row["status"] == "idle" or is_stale:
+        result = (
+            supabase.table("scrape_lock")
+            .update({"status": "running", "started_at": now.isoformat(), "message": ""})
+            .eq("id", 1)
+            .execute()
+        )
+        return len(result.data) > 0
+    return False
 
 # ─────────────────────────────────────────────
-# APScheduler – setiap hari 12:00 WIB
+# APScheduler – setiap hari 00:00 WIB
 # ─────────────────────────────────────────────
 scheduler = BackgroundScheduler(timezone="Asia/Jakarta")
 scheduler.add_job(
