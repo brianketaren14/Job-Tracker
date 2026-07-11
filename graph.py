@@ -450,17 +450,43 @@ def scraping_node(state: JobTracker) -> JobTracker:
     # FIX: scraper_results diasumsikan berasal dari luar (dummy saat testing,
     # scraper asli saat production). Tidak diubah strukturnya, cuma dipastikan
     # sumbernya jelas lewat import/parameter di luar node.
-    query_jobs = os.getenv("QUERY_JOBS")
+
+    query_jobs_raw = os.getenv("QUERY_JOBS")  # contoh: "data scientist atau ml engineer atau ai engineer"
+
+    # Pisahkan query berdasarkan kata "atau" menjadi list query terpisah
+    queries = [q.strip() for q in query_jobs_raw.split(",") if q.strip()]
+
     scraper = serpapi.Client(api_key=os.getenv("SERP_API_KEY"))
-    scraper_results = scraper.search({
-        "engine": "google_jobs",
-        "q": query_jobs,
-        "location": "Indonesia",
-        "google_domain": "google.co.id",
-        "hl": "id",
-        "gl": "id"
-    })
-    state['list_raw_scaping_job'] = scraper_results['jobs_results']
+
+    all_jobs = []
+    seen_job_ids = set()  # untuk dedup, karena beberapa query bisa menghasilkan job yang sama
+
+    for query in queries:
+        try:
+            scraper_results = scraper.search({
+                "engine": "google_jobs",
+                "q": query,
+                "location": "Indonesia",
+                "google_domain": "google.co.id",
+                "hl": "id",
+                "gl": "id"
+            })
+
+            jobs = scraper_results.get('jobs_results', [])
+
+            for job in jobs:
+                # gunakan job_id sebagai key dedup, fallback ke title+company kalau tidak ada
+                job_key = job.get('job_id') or f"{job.get('title')}_{job.get('company_name')}"
+                if job_key not in seen_job_ids:
+                    seen_job_ids.add(job_key)
+                    all_jobs.append(job)
+
+        except Exception as e:
+            # jangan biarkan satu query gagal menghentikan seluruh proses
+            print(f"Gagal scraping untuk query '{query}': {e}")
+            continue
+
+    state['list_raw_scaping_job'] = all_jobs
     return state
 
 
