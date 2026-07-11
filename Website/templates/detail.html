@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Detail Lowongan — JobRadar{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:1.5rem; padding-bottom:4rem">
+
+  <a href="/" class="detail-back">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <path d="M19 12H5M12 5l-7 7 7 7"/>
+    </svg>
+    Kembali ke daftar
+  </a>
+
+  <!-- skeleton sebelum data masuk -->
+  <div id="detail-skeleton">
+    <div class="detail-hero">
+      <div class="skeleton skel-circle" style="width:72px;height:72px;border-radius:14px;flex-shrink:0"></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:.75rem">
+        <div class="skeleton skel-line w-60" style="height:16px"></div>
+        <div class="skeleton skel-line w-40" style="height:12px"></div>
+        <div style="display:flex;gap:.5rem">
+          <div class="skeleton skel-line" style="width:90px;height:22px;border-radius:99px"></div>
+          <div class="skeleton skel-line" style="width:90px;height:22px;border-radius:99px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-card" style="display:flex;flex-direction:column;gap:.75rem">
+        {% for _ in range(6) %}
+        <div class="skeleton skel-line w-100"></div>
+        {% endfor %}
+      </div>
+      <div class="detail-card" style="display:flex;flex-direction:column;gap:.75rem">
+        {% for _ in range(5) %}
+        <div class="skeleton skel-line w-80"></div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- real content -->
+  <div id="detail-content" style="display:none">
+    <div class="detail-hero">
+      <div class="detail-logo" id="d-logo"></div>
+      <div class="detail-info">
+        <div class="detail-title" id="d-title"></div>
+        <div class="detail-company" id="d-company"></div>
+        <div class="detail-meta" id="d-meta"></div>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <!-- description -->
+      <div>
+        <div class="detail-card" style="margin-bottom:1.5rem">
+          <div class="detail-section-title">Ringkasan</div>
+          <p id="d-summary" style="font-size:.9rem;color:var(--text-2);line-height:1.7"></p>
+        </div>
+        <div class="detail-card">
+          <div class="detail-section-title">Deskripsi Pekerjaan</div>
+          <div class="job-description" id="d-description"></div>
+        </div>
+      </div>
+
+      <!-- sidebar -->
+      <div>
+        <div class="detail-card" style="margin-bottom:1.25rem">
+          <div class="detail-section-title">Informasi</div>
+          <div id="d-sidebar"></div>
+          <a id="d-apply-btn" href="#" target="_blank" rel="noopener"
+            class="btn btn-primary" style="width:100%;justify-content:center;margin-top:1.25rem">
+            Lamar Sekarang
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+          </a>
+        </div>
+
+        <div class="detail-card">
+          <div class="detail-section-title">Skills</div>
+          <div class="skill-tags" id="d-skills" style="gap:.45rem"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="detail-error" style="display:none;text-align:center;padding:4rem 1rem;color:var(--text-3)">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:1rem;opacity:.4">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <p>Lowongan tidak ditemukan.</p>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const JOB_ID = {{ job_id }};
+</script>
+<script src="{{ url_for('static', filename='js/detail.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}JobRadar — Dashboard{% endblock %}
+
+{% block head %}
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <h1 class="page-title">Dashboard <span style="color:var(--accent)">Analitik</span></h1>
+    <p class="page-subtitle">Tren skill, distribusi jadwal, dan riwayat scraping</p>
+  </div>
+
+  <!-- stat cards -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Total Lowongan</div>
+      <div class="stat-value accent" id="stat-total-jobs">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Skill</div>
+      <div class="stat-value" id="stat-total-skills">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Posting Terbaru</div>
+      <div class="stat-value green" id="stat-latest" style="font-size:1.2rem;margin-top:.4rem">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Scraping Terakhir</div>
+      <div class="stat-value" id="stat-last-run" style="font-size:1rem;margin-top:.5rem;color:var(--text-2)">—</div>
+    </div>
+  </div>
+
+  <!-- charts -->
+  <div class="charts-grid">
+    <div class="chart-card full">
+      <div class="chart-title">📊 Top 20 Skill Paling Dicari</div>
+      <div id="chart-skills" style="height:400px"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">📅 Posting Lowongan per Hari (30 Hari Terakhir)</div>
+      <div id="chart-timeline" style="height:300px"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">🗂 Tipe Kontrak</div>
+      <div id="chart-schedule" style="height:300px"></div>
+    </div>
+  </div>
+
+  <!-- manual scrape panel -->
+  <div class="scrape-panel">
+    <h2>
+      <div class="status-dot" id="dot"></div>
+      Trigger Scraping Manual
+    </h2>
+
+    <div id="scrape-alert" class="alert"></div>
+
+    <div class="scrape-form">
+      <div class="form-group">
+        <label class="form-label" for="pw-input">Admin Password</label>
+        <input type="password" id="pw-input" class="form-input" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary" id="scrape-btn" onclick="triggerScrape()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+        Jalankan Sekarang
+      </button>
+    </div>
+
+    <p class="text-muted" style="margin-top:.75rem">
+      Scraping otomatis dijadwalkan setiap hari pukul <strong style="color:var(--text-2)">12.00 WIB</strong>.
+    </p>
+
+    <!-- history table -->
+    <div id="history-wrap" style="margin-top:1.5rem;display:none">
+      <div style="font-size:.8rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:.75rem">
+        Riwayat Scraping (20 Terakhir)
+      </div>
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Waktu</th>
+            <th>Status</th>
+            <th>Durasi</th>
+            <th>Pesan</th>
+          </tr>
+        </thead>
+        <tbody id="history-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

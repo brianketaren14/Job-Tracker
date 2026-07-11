@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}JobRadar — Lowongan Kerja AI/ML{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <h1 class="page-title">Lowongan <span style="color:var(--accent)">AI / ML</span> Terkini</h1>
+    <p class="page-subtitle">Data Scientist · ML Engineer · AI Engineer · Indonesia</p>
+  </div>
+
+  <div class="search-wrap">
+    <input
+      type="text" id="search-input" class="search-input"
+      placeholder="Cari judul, perusahaan, atau lokasi…"
+      autocomplete="off"
+    >
+    <button class="btn btn-primary" id="search-btn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      Cari
+    </button>
+  </div>
+
+  <div id="result-info" class="text-muted" style="margin-bottom:1rem"></div>
+
+  <div id="jobs-grid" class="jobs-grid">
+    <!-- skeleton -->
+    {% for _ in range(6) %}
+    <div class="skel-card">
+      <div class="skel-row">
+        <div class="skeleton skel-circle"></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:.5rem">
+          <div class="skeleton skel-line w-80"></div>
+          <div class="skeleton skel-line w-40"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:.5rem">
+        <div class="skeleton skel-line" style="width:80px;height:20px;border-radius:99px"></div>
+        <div class="skeleton skel-line" style="width:70px;height:20px;border-radius:99px"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <div class="skeleton skel-line w-100"></div>
+        <div class="skeleton skel-line w-80"></div>
+        <div class="skeleton skel-line w-60"></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div id="pagination" class="pagination"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/index.js') }}"></script>
+{% endblock %}
