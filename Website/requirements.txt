@@ -1,9 +1,8 @@
 flask>=3.0.0
 python-dotenv>=1.0.0
 supabase>=2.3.0
-apscheduler>=3.10.4
 
-# LangGraph / LangChain (sudah ada di proyek utama, pastikan versi compatible)
+# LangGraph / LangChain pipeline (dipakai oleh graph.py)
 langchain>=0.2.0
 langgraph>=0.1.0
 langchain-groq>=0.1.0
