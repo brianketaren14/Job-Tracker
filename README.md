@@ -2,6 +2,9 @@
 
 An automated job-listing pipeline that scrapes job postings (via SerpApi's Google Jobs engine), enriches them with LLM-powered extraction, deduplicates against an existing database, and serves the results through a Flask dashboard. The extraction/enrichment pipeline is orchestrated as a **LangGraph** state machine, built with **LangChain** agents, and traced end-to-end with **LangSmith**.
 
+## Website
+link website : https://web-production-e5c88.up.railway.app/
+
 ## Features
 
 - **Automated scraping** of job postings from Google Jobs (via SerpApi) across multiple search queries
